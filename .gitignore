@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Environment files (keep the template)
+.env
+.env.*
+!.env.example
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Build / tooling output
+dist/
+build/
+coverage/
+.vercel/
+.eslintcache
+
+# Local uploads / temp files
+public/uploads/
+tmp/
+
+# Private notes
+docs-private/
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp

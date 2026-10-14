@@ -1,0 +1,24 @@
+# Exclude environment files and secrets
+.env
+.env*
+!.env.example
+
+# Exclude dependencies and temporary files
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+error.log
+*.log
+
+# Exclude test files and reports
+tests
+coverage
+.nyc_output
+
+# Exclude VCS and IDE files
+.git
+.gitignore
+.dockerignore
+.vscode
+.idea

@@ -1,0 +1,19 @@
+# Keep the serverless bundle small; only api/, src/ and prisma/ are needed at runtime
+node_modules
+tests
+scripts
+docs
+*.md
+!README.md
+Dockerfile
+.dockerignore
+docker-compose*.yml
+jest.config.js
+error.log
+*.log
+# Local dev helper scripts and data dumps
+brute-dns.js
+finder.js
+check-branch.js
+generate-prisma.js
+branches.json

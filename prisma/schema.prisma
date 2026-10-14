@@ -1,0 +1,170 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "rhel-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(auto()) @map("_id") @db.ObjectId
+  email         String   @unique
+  password      String
+  name          String?
+  phone         String
+  role          Role     @default(CUSTOMER)
+  isVerified    Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  cart          Cart?
+  orders        Order[]
+  managedBranch Branch?  @relation("BranchManager")
+  branchId      String?  @db.ObjectId
+}
+
+enum Role {
+  CUSTOMER
+  MANAGER
+  ADMIN
+}
+
+model Branch {
+  id         String  @id @default(auto()) @map("_id") @db.ObjectId
+  name       String  @unique
+  branchName String?
+  location   String?
+  address    String?
+  city       String?
+  state      String?
+  pincode    String?
+  phone      String?
+
+  // New Manager Details
+  managerName    String?
+  managerPhone   String?
+  managerAddress String?
+  managerCity    String?
+  managerState   String?
+  managerPincode String?
+  panNumber      String?
+  aadharNumber   String?
+
+  gstNumber          String
+  fssaiLicense       String?
+  bankAccountName    String?
+  bankAccountNumber  String?
+  bankIfscCode       String?
+  openTime           String?
+  closeTime          String?
+  storeImageUrl      String?
+  licenseImageUrl    String?
+  fssaiPdfUrl        String?
+  gstPdfUrl          String?
+  bankPassbookPdfUrl String?
+  managerPhotoUrl    String?
+  isVisible          Boolean   @default(false)
+  storeStatus        String    @default("pending") // pending, under_review, verified, rejected
+  manager            User      @relation("BranchManager", fields: [managerId], references: [id])
+  managerId          String    @unique @db.ObjectId
+  products           Product[]
+  orders             Order[]
+  branchStatuses     BranchItemStatus[]
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+model Product {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  price       Float
+  category    String
+  dietType    String?
+  isAvailable Boolean  @default(true)
+  imageUrl    String
+  branchId    String?  @db.ObjectId
+  branch      Branch?  @relation(fields: [branchId], references: [id])
+  branchStatuses BranchItemStatus[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([category])
+  @@index([branchId])
+}
+
+model BranchItemStatus {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  branchId    String   @db.ObjectId
+  productId   String   @db.ObjectId
+  isAvailable Boolean  @default(true)
+  isDeleted   Boolean  @default(false)
+  
+  branch      Branch   @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  
+  @@unique([branchId, productId])
+}
+
+model Cart {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  userId    String     @unique @db.ObjectId
+  user      User       @relation(fields: [userId], references: [id])
+  items     CartItem[]
+  orderType OrderType  @default(DINE_IN)
+  total     Float      @default(0)
+}
+
+type CartItem {
+  productId   String @db.ObjectId
+  productName String
+  price       Float
+  quantity    Int
+}
+
+model Order {
+  id         String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId     String      @db.ObjectId
+  user       User        @relation(fields: [userId], references: [id])
+  branchId   String      @db.ObjectId
+  branch     Branch      @relation(fields: [branchId], references: [id])
+  items      OrderItem[]
+  orderTotal    Float
+  orderType     OrderType
+  paymentMethod PaymentMethod @default(CASH)
+  paymentStatus String        @default("pending") // pending, paid, failed 
+  status        OrderStatus   @default(RECEIVED)
+  createdAt  DateTime    @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
+  @@index([branchId])
+}
+
+type OrderItem {
+  productId   String @db.ObjectId
+  productName String
+  price       Float
+  quantity    Int
+  totalPrice  Float
+}
+
+enum OrderType {
+  DINE_IN
+  TAKEAWAY
+}
+
+enum OrderStatus {
+  RECEIVED
+  PREPARING
+  READY
+  COMPLETED
+  CANCELLED
+}
+
+enum PaymentMethod {
+  CASH
+  UPI
+  CARD
+}
+
