@@ -243,7 +243,7 @@ const toggleVisibility = async (id, isVisible, currentUser) => {
     });
 };
 
-const verifyBranch = async (id, status) => {
+const verifyBranch = async (id, status, reason) => {
     // First fetch the branch so we have email/name before any changes
     const branch = await prisma.branch.findUnique({
         where: { id },
@@ -274,7 +274,7 @@ const verifyBranch = async (id, status) => {
         if (status === 'verified') {
             sendStoreVerifiedEmail(managerEmail, managerName, storeName);
         } else {
-            sendStoreStatusChangeEmail(managerEmail, managerName, storeName, status);
+            sendStoreStatusChangeEmail(managerEmail, managerName, storeName, status, reason);
         }
     }
 

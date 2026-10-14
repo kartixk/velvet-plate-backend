@@ -214,7 +214,10 @@ const sendStoreVerifiedEmail = async (managerEmail, managerName, storeName) => {
 /**
  * Sent whenever a store's status changes (under_review / rejected / etc.)
  */
-const sendStoreStatusChangeEmail = async (managerEmail, managerName, storeName, newStatus) => {
+const escapeHtml = (v) => String(v).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+
+// `reason` is optional and only used for rejections (admin-entered, so it is escaped and length-capped).
+const sendStoreStatusChangeEmail = async (managerEmail, managerName, storeName, newStatus, reason) => {
     const STATUS_CONTENT = {
         pending: {
             emoji: '⏳', subject: `Store Update — ${storeName}`,
@@ -233,6 +236,11 @@ const sendStoreStatusChangeEmail = async (managerEmail, managerName, storeName, 
             body: `Unfortunately, your store application for <strong>"${storeName}"</strong> could not be approved at this time. Please review your submitted documents (GST / FSSAI / Bank details) and re-submit via the Partner Dashboard. If you need help, reply to this email.`
         },
     };
+
+    const cleanReason = newStatus === 'rejected' && typeof reason === 'string' ? reason.trim().slice(0, 200) : '';
+    if (cleanReason) {
+        STATUS_CONTENT.rejected.body += `<br><br><strong>Reason from our review team:</strong> ${escapeHtml(cleanReason)}`;
+    }
 
     const content = STATUS_CONTENT[newStatus] || {
         emoji: '📋',

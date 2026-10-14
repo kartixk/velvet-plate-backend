@@ -211,7 +211,7 @@ const uploadDocuments = async (req, res, next) => {
 
 const verifyBranch = async (req, res, next) => {
     try {
-        const verifiedBranch = await branchService.verifyBranch(req.params.id, req.body.status);
+        const verifiedBranch = await branchService.verifyBranch(req.params.id, req.body.status, req.body.reason);
         res.status(200).json(verifiedBranch);
     } catch (err) {
         next(err);
