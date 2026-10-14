@@ -1,5 +1,8 @@
 # Use official Node.js Alpine image
-FROM node:18-alpine
+FROM node:22-alpine
+
+# Prisma needs OpenSSL on Alpine
+RUN apk add --no-cache openssl
 
 # Set working directory
 WORKDIR /app
@@ -7,12 +10,11 @@ WORKDIR /app
 # Copy package manifests first for caching
 COPY package*.json ./
 
+# Prisma schema must exist before npm ci (postinstall runs prisma generate)
+COPY prisma ./prisma/
+
 # Install production dependencies deterministically
 RUN npm ci --omit=dev
-
-# Copy Prisma schema and generate client
-COPY prisma ./prisma/
-RUN npx prisma generate
 
 # Copy application source
 COPY . .
