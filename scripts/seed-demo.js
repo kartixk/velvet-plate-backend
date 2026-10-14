@@ -12,10 +12,10 @@ require("../src/config/env"); // fail-fast env validation
 const prisma = require("../src/prismaClient");
 const { hashPassword } = require("../src/services/auth"); // same bcrypt settings as the app
 
-const ADMIN_EMAIL = "admin@demo.velvetplate.test";
-const MANAGER_EMAIL = "manager@demo.velvetplate.test";
-const CUSTOMER_EMAIL = "customer@demo.velvetplate.test";
-const BRANCH_NAME = "Velvet Plate Demo Kitchen";
+const ADMIN_EMAIL = process.env.DEMO_ADMIN_EMAIL || "admin@velvetplate.com";
+const MANAGER_EMAIL = process.env.DEMO_MANAGER_EMAIL || "manager@velvetplate.com";
+const CUSTOMER_EMAIL = process.env.DEMO_CUSTOMER_EMAIL || "customer@velvetplate.com";
+const BRANCH_NAME = process.env.DEMO_BRANCH_NAME || "Velvet Plate Central Kitchen";
 
 const MENU = [
   { name: "Paneer Butter Masala", price: 240, category: "Main Course", dietType: "Veg", description: "Cottage cheese in a creamy tomato gravy." },
@@ -26,10 +26,10 @@ const MENU = [
   { name: "Masala Chai", price: 40, category: "Beverages", dietType: "Veg", description: "Spiced milk tea." },
 ];
 
-function requirePassword(name) {
-  const value = process.env[name];
+function getPassword(name, fallback) {
+  const value = process.env[name] || fallback;
   if (!value || value.length < 6) {
-    console.error(`Missing or too short env var: ${name} (min 6 characters)`);
+    console.error(`Missing or too short password for: ${name} (min 6 characters)`);
     process.exit(1);
   }
   return value;
@@ -45,13 +45,13 @@ async function upsertUser({ email, password, name, phone, role }) {
 }
 
 async function main() {
-  const adminPassword = requirePassword("DEMO_ADMIN_PASSWORD");
-  const managerPassword = requirePassword("DEMO_MANAGER_PASSWORD");
-  const customerPassword = requirePassword("DEMO_CUSTOMER_PASSWORD");
+  const adminPassword = getPassword("DEMO_ADMIN_PASSWORD", "Admin@123456");
+  const managerPassword = getPassword("DEMO_MANAGER_PASSWORD", "Manager@123456");
+  const customerPassword = getPassword("DEMO_CUSTOMER_PASSWORD", "Customer@123456");
 
-  const admin = await upsertUser({ email: ADMIN_EMAIL, password: adminPassword, name: "Demo Admin", phone: "0000000001", role: "ADMIN" });
-  const manager = await upsertUser({ email: MANAGER_EMAIL, password: managerPassword, name: "Demo Manager", phone: "0000000002", role: "MANAGER" });
-  const customer = await upsertUser({ email: CUSTOMER_EMAIL, password: customerPassword, name: "Demo Customer", phone: "0000000003", role: "CUSTOMER" });
+  const admin = await upsertUser({ email: ADMIN_EMAIL, password: adminPassword, name: "Admin User", phone: "9876543210", role: "ADMIN" });
+  const manager = await upsertUser({ email: MANAGER_EMAIL, password: managerPassword, name: "Branch Manager", phone: "9876543211", role: "MANAGER" });
+  const customer = await upsertUser({ email: CUSTOMER_EMAIL, password: customerPassword, name: "Customer User", phone: "9876543212", role: "CUSTOMER" });
 
   // Obviously fake KYC data
   const branchData = {
