@@ -58,8 +58,26 @@ const authLimiter = rateLimit({
 // );
 
 const path = require('path');
-const corsOrigin = process.env.CORS_ORIGIN || 'http://localhost:5173';
-app.use(cors({ origin: corsOrigin, credentials: true }));
+// CORS_ORIGIN accepts a comma-separated list; local dev origins are always allowed.
+const allowedOrigins = [
+  'http://localhost:5173',
+  'http://127.0.0.1:5173',
+  'https://velvet-plate.vercel.app',
+  ...(process.env.CORS_ORIGIN || '')
+    .split(',')
+    .map((o) => o.trim().replace(/\/+$/, ''))
+    .filter(Boolean),
+];
+app.use(
+  cors({
+    origin: (origin, cb) => {
+      // No Origin header = same-origin / server-to-server / curl
+      if (!origin || allowedOrigins.includes(origin)) return cb(null, true);
+      return cb(null, false);
+    },
+    credentials: true,
+  })
+);
 app.use(express.json({ limit: '1mb' }));
 app.use(cookieParser());
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
