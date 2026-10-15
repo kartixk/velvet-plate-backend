@@ -1,14 +1,23 @@
 const userService = require("../services/userService");
 
+// The frontend (vercel.app) and API (railway.app) are different sites in production, so the
+// auth cookie must be SameSite=None; Secure or the browser drops it and the user is logged out
+// on the very next request. In local dev (http, same site) keep Lax and non-secure.
+const isSecureEnv =
+    process.env.NODE_ENV === 'production' || Boolean(process.env.RAILWAY_ENVIRONMENT);
+const cookieBase = {
+    httpOnly: true,
+    secure: isSecureEnv,
+    sameSite: isSecureEnv ? 'none' : 'lax',
+};
+
 const register = async (req, res, next) => {
     try {
         const { user, token } = await userService.registerUser(req.body);
 
         if (token) {
             res.cookie('token', token, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                sameSite: 'strict',
+                ...cookieBase,
                 maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
             });
         }
@@ -36,9 +45,7 @@ const login = async (req, res, next) => {
         const { user, token } = await userService.loginUser(req.body);
 
         res.cookie('token', token, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'strict',
+            ...cookieBase,
             maxAge: 30 * 24 * 60 * 60 * 1000 // 30 days
         });
 
@@ -59,10 +66,8 @@ const login = async (req, res, next) => {
 
 const logout = (req, res) => {
     res.cookie('token', 'loggedout', {
+        ...cookieBase,
         expires: new Date(Date.now() + 10 * 1000),
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict'
     });
     res.status(200).json({ status: 'success' });
 };
